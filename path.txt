@@ -1,0 +1,24 @@
+C:\WINDOWS\system32
+C:\WINDOWS
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+C:\Program Files\Java\jdk-11.0.10\bin
+C:\MinGW\bin
+C:\WINDOWS\System32\OpenSSH\
+D:\Strawberry\c\bin
+D:\Strawberry\perl\site\bin
+D:\Strawberry\perl\bin
+C:\Program Files\Git\cmd
+C:\Program Files\Git\mingw64\bin
+C:\Program Files\Git\usr\bin
+C:\Program Files\nodejs\
+C:\Program Files\MySQL\MySQL Shell 8.0\bin\
+C:\Users\Swatantraraj Singh\AppData\Local\Microsoft\WindowsApps
+C:\Users\Swatantraraj Singh\AppData\Local\Programs\Microsoft VS Code\bin
+C:\MinGW\bin
+C:\Users\Swatantraraj Singh\AppData\Local\Programs\MiKTeX\miktex\bin\x64\
+D:\MikTex\miktex\bin\x64\
+
+C:\Users\Swatantraraj Singh\AppData\Local\Programs\Ollama
+C:\Users\Swatantraraj Singh\AppData\Roaming\npm
+C:\Users\Swatantraraj Singh\AppData\Local\Programs\Antigravity\bin

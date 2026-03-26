@@ -1,0 +1,20 @@
+# Streamlit & Python
+.streamlit/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+env/
+venv/
+ENV/
+
+# OS Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Data
+*.csv
+*.xlsx
+# We KEEP .pkl files since they are small (<100KB) and required for the app to run.
