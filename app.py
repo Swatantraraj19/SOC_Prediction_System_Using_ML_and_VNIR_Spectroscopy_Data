@@ -43,7 +43,7 @@ translations = {
         "analyzing": "Analyzing spectra...",
         "avg_soc": "Avg SOC",
         "tab_results": "📊 Results",
-        "tab_spectral": "📈 Spectra",
+        "tab_spectral": "📈 Spectral",
         "tab_performance": "🎯 Accuracy",
         "filter_title": "🔍 Filter & Trends",
         "results_title": "📝 Predictions",
@@ -131,7 +131,10 @@ if file is not None and model is not None:
 
         # Validate features
         missing_bands = [f for f in features if f not in data_to_pred.columns]
-        for col in missing_bands: data_to_pred[col] = 0.0
+
+        if len(missing_bands) > 0:
+            st.error("❌ Invalid file! Please upload correct spectral data.")
+            st.stop()
         
         input_data = data_to_pred[features].apply(pd.to_numeric, errors='coerce').fillna(0)
 
