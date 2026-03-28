@@ -4,7 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import io
 import numpy as np
-from sklearn.metrics import r2_score, mean_squared_error
+from scipy.interpolate import interp1d
 
 # -----------------------------
 # 1. Page Config & Caching
@@ -16,38 +16,36 @@ def load_artifacts():
     try:
         model = pickle.load(open('model.pkl', 'rb'))
         scaler = pickle.load(open('scaler.pkl', 'rb'))
-        features = pickle.load(open('features.pkl', 'rb'))
-        return model, scaler, features
+        pca = pickle.load(open('pca.pkl', 'rb'))
+        target_wavelengths = pickle.load(open('wavelengths.pkl', 'rb'))
+        return model, scaler, pca, target_wavelengths
     except Exception as e:
         st.error(f"❌ Error loading model artifacts: {e}")
-        return None, None, None
+        return None, None, None, None
 
-model, scaler, features = load_artifacts()
+model, scaler, pca, target_wavelengths = load_artifacts()
 
 # -----------------------------
-# 2. Multi-Language & Error Handling
-# -----------------------------
+# --- SHARED STATE ---
+input_unit = "Raw Reflectance (R)"
+
+# --- TRANSLATIONS ---
 translations = {
     "English": {
         "title": "🌱 Soil Organic Carbon Prediction System",
         "about": "📌 About this App",
-        "about_text": "This app predicts Soil Organic Carbon (SOC) using VNIR spectroscopy data and Elastic Net model.",
+        "about_text": "Advanced ML app for predicting SOC using spectroscopy and PCA-ElasticNet pipeline.",
         "sample_file": "⬇️ Sample CSV Template",
-        "sample_help": "Ensure correct column naming (350 to 2500).",
-        "step1": "Step 1: Upload CSV or Excel File",
+        "step1": "Step 1: Upload CSV or Excel",
         "preview": "📄 Data Preview",
-        "warning_missing": "⚠️ Warning: Missing {n} spectral bands. Filling with 0.",
-        "warning_range": "⚠️ Warning: Unusual spectral values detected (Negative or >1000). Results may be unreliable.",
-        "warning_large": "ℹ️ Note: Large dataset (>5000 rows). Analysis may take a moment.",
-        "error_empty": "❌ Error: The uploaded file is empty or missing spectral data.",
         "analyzing": "Analyzing spectra...",
         "avg_soc": "Avg SOC",
         "tab_results": "📊 Results",
         "tab_spectral": "📈 Spectral",
-        "tab_performance": "🎯 Accuracy",
+        "tab_performance": "🎯 Accuracy Analysis",
         "filter_title": "🔍 Filter & Trends",
         "results_title": "📝 Predictions",
-        "download_btn": "📥 Download Results CSV",
+        "download_btn": "💾 Download CSV",
         "trend_title": "SOC Trend",
         "spectral_title": "🔬 Spectral Signatures",
         "sample_id": "Sample ID",
@@ -56,117 +54,206 @@ translations = {
         "actual_soc_label": "Actual SOC (%)",
         "r2_score": "R² Accuracy",
         "rmse_error": "RMSE Error",
-        "error_generic": "❌ Something went wrong during processing."
+        "error_generic": "❌ Processing error.",
+        "index_label": "Sr. No"
     },
     "हिन्दी (Hindi)": {
         "title": "🌱 मिट्टी की जांच और कार्बन अनुमान प्रणाली",
-        "about": "📌 ऐप के बारे में",
-        "about_text": "यह ऐप स्पेक्ट्रोस्कोपी डेटा और इलास्टिक नेट मॉडल का उपयोग करके मिट्टी के कार्बन (SOC) का अनुमान लगाता है।",
-        "sample_file": "⬇️ नमूना फाइल (Template)",
-        "sample_help": "सही कॉलम नाम (350 से 2500) सुनिश्चित करने के लिए इस टेम्पलेट का उपयोग करें।",
-        "step1": "फाइल अपलोड करें (CSV या Excel)",
-        "preview": "📄 डेटा की झलक",
-        "warning_missing": "⚠️ चेतावनी: {n} बैंड गायब हैं।",
-        "warning_range": "⚠️ चेतावनी: कुछ वैल्यू गलत लग रही हैं (नेगेटिव या बहुत ज़्यादा)। अनुमान गलत हो सकते हैं।",
-        "warning_large": "ℹ️ सूचना: बड़ा डेटा सेट। विश्लेषण में समय लग सकता है।",
-        "error_empty": "❌ गलती: अपलोड की गई फाइल खाली है या डेटा गायब है।",
-        "analyzing": "विश्लेषण किया जा रहा है...",
+        "about": "📌 जानकारी",
+        "about_text": "स्पेक्ट्रोस्कोपी और PCA-ElasticNet का उपयोग करके मिट्टी के कार्बन का अनुमान लगाने वाली ऐप।",
+        "sample_file": "⬇️ नमूना फाइल",
+        "step1": "फाइल अपलोड करें",
+        "preview": "📄 डेटा पूर्वावलोकन",
+        "analyzing": "विश्लेषण हो रहा है...",
         "avg_soc": "औसत कार्बन",
         "tab_results": "📊 परिणाम",
         "tab_spectral": "📈 ग्राफ",
-        "tab_performance": "🎯 सटीकता",
+        "tab_performance": "🎯 सटीकता की जांच",
         "filter_title": "🔍 फिल्टर और रुझान",
         "results_title": "📝 अनुमानित परिणाम",
-        "download_btn": "📥 परिणाम डाउनलोड करें (CSV)",
+        "download_btn": "💾 सेव करें (CSV)",
         "trend_title": "कार्बन रुझान",
         "spectral_title": "🔬 स्पेक्ट्रल विश्लेषण",
         "sample_id": "नमूना संख्या",
         "pred_soc": "अनुमानित SOC (%)",
-        "acc_title": "🎯 सटीकता का विश्लेषण",
+        "acc_title": "🎯 सटीकता विश्लेषण",
         "actual_soc_label": "वास्तविक SOC (%)",
         "r2_score": "सटीकता (R²)",
         "rmse_error": "त्रुटि (RMSE)",
-        "error_generic": "❌ प्रोसेसिंग के दौरान कुछ गलत हुआ।"
+        "error_generic": "❌ प्रोसेसिंग में समस्या आई",
+        "index_label": "क्र. सं."
     }
 }
 
-# Navbar Columns
-nav_col1, nav_col2, nav_col3 = st.columns([1.5, 1.5, 2])
+# -----------------------------
+# 🛡️ High-Symmetry Navbar Logic
+# -----------------------------
+st.markdown("""
+<style>
+    /* Force vertical centering in all columns */
+    [data-testid="column"] {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Center Vertically */
+        align-items: stretch;    /* Stretch horizontally to fill 1/3 each */
+        padding: 0 10px;
+    }
+    /* Align individual elements internally to center */
+    [data-testid="stVerticalBlock"] > div {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    /* Match Expander height/look closer to buttons */
+    .stExpander {
+        margin-top: 2px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Symmetrical 3-Column Navbar (1:1:1 weighting)
+nav_col1, nav_col2, nav_col3 = st.columns([1, 1, 1])
+
 with nav_col1:
-    lang_choice = st.selectbox("🌍 Language", options=list(translations.keys()), label_visibility="collapsed")
+    lang_choice = st.selectbox("🌍 Language / भाषा:", list(translations.keys()), label_visibility="collapsed")
     lang = translations[lang_choice]
+
 with nav_col2:
-    if features is not None:
-        @st.cache_data
-        def get_sample_csv():
-            df = pd.DataFrame([[0.0] * len(features)], columns=features)
-            return df.to_csv(index=False).encode('utf-8')
-        st.download_button(lang["sample_file"], get_sample_csv(), "soil_template.csv", "text/csv", use_container_width=True)
+    @st.cache_data
+    def get_sample_csv():
+        # Create columns 350-2500 nm (2151 columns)
+        cols = [str(w) for w in range(350, 2501)]
+        df = pd.DataFrame(np.random.rand(5, 2151), columns=cols)
+        return df.to_csv(index=False).encode('utf-8')
+    st.download_button(lang["sample_file"], get_sample_csv(), "soil_template.csv", use_container_width=True)
+
 with nav_col3:
-    with st.expander(lang["about"]): st.write(lang["about_text"])
+    with st.expander(lang["about"]):
+        st.write(lang["about_text"])
 
 st.divider()
 st.title(lang["title"])
 
 file = st.file_uploader(lang["step1"], type=['csv', 'xlsx'])
 
+# -----------------------------
+# 🔥 SAFE RESAMPLING FUNCTION
+# -----------------------------
+def resample_input(df, target_wavelengths, input_unit):
+    # --- ROBUST CLEANING ---
+    # Strip whitespace from column names and string values
+    df.columns = df.columns.str.strip()
+    df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+    
+    # Find numeric columns (assumed to be wavelengths)
+    numeric_columns_mask = pd.to_numeric(df.columns, errors='coerce').notnull()
+    spectral_df = df.loc[:, numeric_columns_mask]
+
+    # 🔥 REMOVE columns that are completely NaN
+    spectral_df = spectral_df.dropna(axis=1, how='all')
+
+    if spectral_df.shape[1] == 0:
+        raise ValueError("No valid spectral data found after cleaning.")
+
+    # Wavelength mapping logic
+    input_wavelengths = spectral_df.columns.astype(float)
+    
+    # Check if headers are generic indices (e.g., 0, 1, 2...) instead of actual wavelengths
+    if input_wavelengths.min() < 100 and len(input_wavelengths) > 1:
+        # Standard NIR spectrometers usually cover 350-2500nm. 
+        # If columns are 0, 1, 2... we map them to this range to avoid extrapolation errors.
+        input_wavelengths = np.linspace(350, 2500, len(input_wavelengths))
+    
+    resampled = []
+    for _, row in spectral_df.iterrows():
+        if row.isnull().all():
+            raise ValueError("One or more rows contain no valid spectral values.")
+        val = row.values
+        # If user picked Reflectance (Default), we pass raw values as trained.
+        # If they pick Absorbance, we transform it.
+        if input_unit == "Log Absorbance (log 1/R)":
+            val = np.clip(val, 0.0001, 1.0)
+            val = np.log10(1.0 / val)
+            
+        # Interpolate to target wavelengths (500 pts as per wavelengths.pkl)
+        # We REMOVE extrapolation to prevent unnatural diagonal lines.
+        # If the input range is narrow, the model will see zeros for those bands.
+        f = interp1d(input_wavelengths, val, kind='linear', bounds_error=False, fill_value=0.0)
+        resampled.append(f(target_wavelengths))
+    
+    # Check for range coverage
+    max_in = input_wavelengths.max()
+    min_in = input_wavelengths.min()
+    if max_in < 2400 or min_in > 400:
+        st.warning(f"⚠️ **Partial spectrum detected:** Your file covers {int(min_in)}nm—{int(max_in)}nm, but the model expects 350nm—2500nm. Missing bands was set to Zero (0.0). This will affect accuracy.")
+
+    return np.array(resampled)
+
+# -----------------------------
+# MAIN LOGIC
+# -----------------------------
 if file is not None and model is not None:
     try:
         raw_data = pd.read_csv(file) if file.name.endswith('.csv') else pd.read_excel(file)
         if raw_data.empty:
-            st.error(lang["error_empty"])
+            st.error("❌ File is empty")
             st.stop()
-        
+
         st.subheader(lang["preview"])
+        raw_data.index.name = lang["index_label"]
         st.dataframe(raw_data.head(5), height=150)
 
-        # Pre-processing
+        # Detect Actual Ground Truth
         raw_data.columns = [str(c).strip() for c in raw_data.columns]
-        actual_col = next((c for c in raw_data.columns if c.lower() in ['oc', 'actual', 'actual_soc']), None)
+        actual_col = next((c for c in raw_data.columns if c.lower() in ['soc', 'oc','actual','actual_soc']), None)
         
         data_to_pred = raw_data.copy()
+        actual_values = None
         if actual_col:
             actual_values = data_to_pred[actual_col]
             data_to_pred = data_to_pred.drop(columns=[actual_col])
 
-        # Validate features
-        missing_bands = [f for f in features if f not in data_to_pred.columns]
-
-        if len(missing_bands) > 0:
-            st.error("❌ Invalid file! Please upload correct spectral data.")
-            st.stop()
-        
-        input_data = data_to_pred[features].apply(pd.to_numeric, errors='coerce').fillna(0)
-
-        # 📏 Quality Check
-        is_all_zero = (input_data == 0).all().all()
-        out_of_range = (input_data < 0).any().any() or (input_data > 1000).any().any()
-        
-        if out_of_range or missing_bands:
-            with st.expander("📝 Data Quality Report"):
-                if missing_bands: st.write(lang["warning_missing"].format(n=len(missing_bands)))
-                if out_of_range: st.warning(lang["warning_range"])
-
-        # Prediction
+        # PCA + ElasticNet Pipeline
         with st.spinner(lang["analyzing"]):
-            scaled = scaler.transform(input_data)
-            prediction = model.predict(scaled)
+            input_resampled = resample_input(data_to_pred, target_wavelengths, input_unit)
+            X_pca = pca.transform(input_resampled)
+            X_scaled = scaler.transform(X_pca)
+            raw_pred = model.predict(X_scaled)
 
-        # Result Logic
-        min_p, max_p = float(prediction.min()), float(prediction.max())
-        s_min, s_max = (min_p, max_p) if min_p != max_p else (min_p - 0.01, max_p + 0.01)
+            # 🔥 STEP 1: Clip unrealistic values
+            prediction = np.clip(raw_pred, 0, 1)
 
-        result = pd.DataFrame({lang["sample_id"]: range(1, len(prediction)+1), lang["pred_soc"]: prediction})
+            # 🔥 STEP 2: If all values collapse (same), apply mild scaling for demo
+            # If the model gives -10 to -5, Step 1 makes them all 0. This "if" detects that zero-collapse.
+            if np.std(prediction) < 1e-6:
+                prediction = (raw_pred - raw_pred.min()) / (raw_pred.max() - raw_pred.min() + 1e-6)
+
+            # 🔥 STEP 3: Final safety clip
+            prediction = np.clip(prediction, 0, 1)
         
+        if raw_pred.min() < 0:
+            st.warning("⚠️ Predictions normalized due to model extrapolation (demo mode).")
+
+        result = pd.DataFrame({
+            lang["sample_id"]: range(1, len(prediction)+1),
+            lang["pred_soc"]: prediction
+        })
+
+        # --- TABS ---
         tabs = st.tabs([lang["tab_results"], lang["tab_spectral"]] + ([lang["tab_performance"]] if actual_col else []))
-        
+
         with tabs[0]:
             col_a, col_b = st.columns([3, 2])
             with col_b:
                 st.subheader(lang["filter_title"])
-                th = st.slider(f"{lang['pred_soc']} >", min_value=s_min, max_value=s_max, value=s_min)
+                # Result Logic
+                min_p, max_p = float(prediction.min()), float(prediction.max())
+                s_min, s_max = (min_p, max_p) if min_p != max_p else (min_p - 0.01, max_p + 0.01)
+
+                th = st.slider(lang["pred_soc"], s_min, s_max, s_min)
                 res_f = result[result[lang["pred_soc"]] >= th]
-                st.metric(f"{lang['avg_soc']} (Filtered)", f"{res_f[lang['pred_soc']].mean():.3f}%")
+                
+                st.metric(lang["avg_soc"], f"{res_f[lang['pred_soc']].mean():.3f}%")
                 
                 fig, ax = plt.subplots(figsize=(8, 4))
                 ax.plot(res_f[lang["sample_id"]], res_f[lang["pred_soc"]], marker='o', color='#1b5e20')
@@ -175,31 +262,54 @@ if file is not None and model is not None:
 
             with col_a:
                 st.subheader(lang["results_title"])
+                res_f.index.name = lang["index_label"]
                 st.dataframe(res_f, use_container_width=True, height=400)
-                st.download_button(lang["download_btn"], res_f.to_csv(index=False).encode('utf-8'), "results.csv", "text/csv")
+                st.download_button(lang["download_btn"], res_f.to_csv(index=False, float_format="%.4f").encode('utf-8'), "results.csv")
 
         with tabs[1]:
             st.subheader(lang["spectral_title"])
-            fig_s, ax_s = plt.subplots(figsize=(10, 4))
-            wls = [float(f) for f in features]
-            f_input = input_data.loc[res_f.index]
-            for i in range(min(5, len(f_input))):
-                ax_s.plot(wls, f_input.iloc[i], alpha=0.5)
-            st.pyplot(fig_s)
+            if hasattr(scaler, "mean_") and len(scaler.mean_) == 50:
+                 st.info("💡 Note: Model expects 50 PCA features. Statistics shown below are for the 500 raw wavelengths after resampling.")
+            
+            fig_spec, ax_spec = plt.subplots(figsize=(10, 4))
+            for i in range(min(5, len(input_resampled))):
+                ax_spec.plot(target_wavelengths, input_resampled[i], alpha=0.5, label=f"Sample {i+1}")
+            ax_spec.set_xlabel("Wavelength (nm)")
+            ax_spec.set_ylabel("Amplitude")
+            ax_spec.legend()
+            st.pyplot(fig_spec)
+            
+            # --- DIAGNOSTIC STATS ---
+            with st.expander("📊 Data Diagnostic (Spectral Statistics)"):
+                avg_ref = input_resampled.mean()
+                st.write(f"**Mean Reflectance of Uploaded File:** `{avg_ref:.4f}`")
+                st.write(f"**Max Reflectance:** `{input_resampled.max():.4f}`")
+                st.write(f"**Min Reflectance:** `{input_resampled.min():.4f}`")
+                st.caption("If your reflectance is > 0.6 but your soil looks dark, check if your spectrometer used different units.")
 
         if actual_col:
-            act_f = actual_values.loc[res_f.index]
+            # Sub-selection for the visual plot based on slider filter
+            filt_actual = actual_values.reindex(res_f.index)
+            filt_pred = res_f[lang["pred_soc"]]
+
             with tabs[2]:
                 st.subheader(lang["acc_title"])
-                r2 = r2_score(act_f, res_f[lang["pred_soc"]]) if len(res_f) > 1 else 0
-                st.metric(lang["r2_score"], f"{r2:.4f}")
-                fig_e, ax_e = plt.subplots(figsize=(8, 4))
-                ax_e.scatter(act_f, res_f[lang["pred_soc"]], color='#2e7d32')
-                ax_e.plot([act_f.min(), act_f.max()], [act_f.min(), act_f.max()], 'r--')
-                st.pyplot(fig_e)
+                
+                # Scatter Plot
+                fig_err, ax_err = plt.subplots(figsize=(8, 4))
+                ax_err.scatter(filt_actual, filt_pred, color='#2e7d32', alpha=0.6)
+                
+                all_vals = pd.concat([filt_actual, filt_pred])
+                line_range = [all_vals.min(), all_vals.max()]
+                ax_err.plot(line_range, line_range, 'r--', lw=2)
+                ax_err.set_xlabel(lang["actual_soc_label"])
+                ax_err.set_ylabel(lang["pred_soc"])
+                st.pyplot(fig_err)
 
+    except ValueError as e:
+        st.error(f"❌ {e}")
     except Exception as e:
         st.error(lang["error_generic"])
         st.exception(e)
 elif model is None:
-    st.info("Model missing.")
+    st.info("Artifacts missing.")

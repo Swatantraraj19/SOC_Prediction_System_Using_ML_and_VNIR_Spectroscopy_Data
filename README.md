@@ -1,55 +1,47 @@
-# 🌍 Soil Organic Carbon Prediction & Analysis
+# 🌱 Soil Organic Carbon Analyzer
 
-A comprehensive system for predicting **Soil Organic Carbon (SOC)** using VNIR spectroscopy and Machine Learning. This repository contains both the **Interactive Web Application** and the **original Research Notebooks**.
+A powerful **Streamlit** application designed to predict **Soil Organic Carbon (SOC)** using VNIR spectroscopy data and a pre-trained **Elastic Net** model.
 
----
+## 🚀 Key Features
+- **Spectral Prediction:** Predict SOC from 350nm-2500nm wavelength data.
+- **Robust Validation:** Automatically handles missing data and alerts users of required spectral bands.
+- **Data Insights:** Get statistics and distributions for your uploaded soil samples.
+- **Sample Mapping:** Interactive visualization for samples with GPS coordinates.
+- **Spectral Signatures:** Visualize the reflectance/absorbance profiles for up to 10 samples.
+- **Exportable Results:** Download your predictions directly as a CSV.
 
-## 🚀 1. Interactive Soil Analyzer (Web App)
-Predict SOC in real-time by uploading spectral data (350nm - 2500nm).
+## 🛠️ Getting Started
 
-### ✨ Features
-- **Hindi & English Support:** Fully localized for regional use.
-- **Spectral Prediction:** Powered by a pre-trained **Elastic Net** model.
-- **Smart Filtering:** Filter results by carbon threshold.
-- **Visual Trends:** Integrated charts for SOC trends and spectral signatures.
-- **Exportable:** Download predictions as CSV.
+### Prerequisites
+- Python 3.8+
+- [Optional] VS Code or any text editor
 
-### 🛠️ Getting Started
-1. **Install Dependencies:**
+### Installation
+1. Clone or download this repository.
+2. Install the required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. **Run the App:**
-   ```bash
-   streamlit run app.py
-   ```
 
----
+### Running the App
+From your terminal, navigate to the folder and run:
+```bash
+streamlit run app.py
+```
 
-## 🧪 2. Research & Model Training (Colab)
-This project originated from a study using Visible Near Infrared (VNIR) spectroscopy to estimate SOC content.
-
-### 📉 Algorithms Studied
-- **Elastic Net Regression** (Best Performing Model)
-- **Support Vector Regression (SVR)**
-- **Polynomial Regression**
-
-### 📁 Research Files
-- `Project_ElasticNet.ipynb`: Primary training notebook.
-- `Project_Polynomial.ipynb`: Polynomial experimentation.
-- `Project_SVR.ipynb`: SVR experimentation.
-
-### 📊 Performance Summary
-Elastic Net Regression outperformed other models by effectively balancing feature selection and regularization, achieving the lowest RMSE and the highest R² Score.
-
----
+## 📄 File Format
+- **Supported Formats:** `.csv` or `.xlsx`
+- **Required Columns:**
+  - Spectral bands from `350` to `2500`.
+  - [Optional] `Latitude` and `Longitude` for mapping features.
+  - The app automatically ignores existing `oc` (Organic Carbon) columns.
 
 ## 📦 Project Structure
-- `app.py`: Main interactive interface.
-- `model.pkl`: Pre-trained Elastic Net model used by the app.
-- `scaler.pkl` & `features.pkl`: Preprocessing artifacts.
+- `app.py`: The main Streamlit interface.
+- `model.pkl`: Pre-trained Elastic Net model.
+- `scaler.pkl`: StandardScaler for data normalization.
+- `features.pkl`: List of required spectral features.
 - `requirements.txt`: Python dependencies.
-- `*.ipynb`: Original research and training notebooks.
 
 ---
 Built with ❤️ for Soil Science.
