@@ -25,6 +25,8 @@ Traditional SOC testing is expensive and slow. This project leverages **Machine 
 -   **Reporting:** Professional high-precision CSV export (4 decimal places) for research documentation.
 
 ---
+**Live Link:** https://jalynatmucetgtplmgqf22.streamlit.app/
+---
 
 ## 📖 Getting Started
 
