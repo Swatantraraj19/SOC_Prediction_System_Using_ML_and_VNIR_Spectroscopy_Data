@@ -1,0 +1,15 @@
+--- model.pkl ---
+Type: <class 'sklearn.linear_model._coordinate_descent.ElasticNet'>
+Features In: 50
+Coef Shape: (50,)
+--- scaler.pkl ---
+Type: <class 'sklearn.preprocessing._data.StandardScaler'>
+Features In: 50
+--- pca.pkl ---
+Type: <class 'sklearn.decomposition._pca.PCA'>
+Features In: 500
+PCA Components: (50, 500)
+PCA N-comp: 50
+--- wavelengths.pkl ---
+Type: <class 'numpy.ndarray'>
+Length/Shape: 500

@@ -6,9 +6,8 @@ import io
 import numpy as np
 from scipy.interpolate import interp1d
 
-# -----------------------------
 # 1. Page Config & Caching
-# -----------------------------
+
 st.set_page_config(page_title="Soil Analyzer", layout="wide", page_icon="🌱")
 
 @st.cache_resource
@@ -25,7 +24,6 @@ def load_artifacts():
 
 model, scaler, pca, target_wavelengths = load_artifacts()
 
-# -----------------------------
 # --- SHARED STATE ---
 input_unit = "Raw Reflectance (R)"
 
@@ -85,9 +83,7 @@ translations = {
     }
 }
 
-# -----------------------------
-# 🛡️ High-Symmetry Navbar Logic
-# -----------------------------
+#  High-Symmetry Navbar Logic
 st.markdown("""
 <style>
     /* Force vertical centering in all columns */
@@ -136,9 +132,7 @@ st.title(lang["title"])
 
 file = st.file_uploader(lang["step1"], type=['csv', 'xlsx'])
 
-# -----------------------------
-# 🔥 SAFE RESAMPLING FUNCTION
-# -----------------------------
+#  SAFE RESAMPLING FUNCTION
 def resample_input(df, target_wavelengths, input_unit):
     # --- ROBUST CLEANING ---
     # Strip whitespace from column names and string values
@@ -149,7 +143,7 @@ def resample_input(df, target_wavelengths, input_unit):
     numeric_columns_mask = pd.to_numeric(df.columns, errors='coerce').notnull()
     spectral_df = df.loc[:, numeric_columns_mask]
 
-    # 🔥 REMOVE columns that are completely NaN
+    #  REMOVE columns that are completely NaN
     spectral_df = spectral_df.dropna(axis=1, how='all')
 
     if spectral_df.shape[1] == 0:
@@ -189,9 +183,9 @@ def resample_input(df, target_wavelengths, input_unit):
 
     return np.array(resampled)
 
-# -----------------------------
+
 # MAIN LOGIC
-# -----------------------------
+
 if file is not None and model is not None:
     try:
         raw_data = pd.read_csv(file) if file.name.endswith('.csv') else pd.read_excel(file)
@@ -220,15 +214,15 @@ if file is not None and model is not None:
             X_scaled = scaler.transform(X_pca)
             raw_pred = model.predict(X_scaled)
 
-            # 🔥 STEP 1: Clip unrealistic values
+            #  STEP 1: Clip unrealistic values
             prediction = np.clip(raw_pred, 0, 1)
 
-            # 🔥 STEP 2: If all values collapse (same), apply mild scaling for demo
+            #  STEP 2: If all values collapse (same), apply mild scaling for demo
             # If the model gives -10 to -5, Step 1 makes them all 0. This "if" detects that zero-collapse.
             if np.std(prediction) < 1e-6:
                 prediction = (raw_pred - raw_pred.min()) / (raw_pred.max() - raw_pred.min() + 1e-6)
 
-            # 🔥 STEP 3: Final safety clip
+            #  STEP 3: Final safety clip
             prediction = np.clip(prediction, 0, 1)
         
         if raw_pred.min() < 0:
