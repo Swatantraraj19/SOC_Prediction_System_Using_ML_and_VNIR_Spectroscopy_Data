@@ -67,4 +67,4 @@ streamlit run app.py
 -   `wavelengths.pkl`: Master list of target wavelengths (350-2500nm).
 
 ---
-Built with ❤️ for the future of **Sustainable Agriculture** and **Carbon Sequestration.** 🌍🏜️🌱
+Built by Swatantra Raj Kumar Singh for the future of **Sustainable Agriculture** and **Carbon Sequestration.** 🌍🏜️🌱
