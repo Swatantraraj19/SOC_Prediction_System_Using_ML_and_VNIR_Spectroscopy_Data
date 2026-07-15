@@ -36,7 +36,7 @@ translations = {
         "sample_file": "⬇️ Sample CSV Template",
         "step1": "Step 1: Upload CSV or Excel",
         "preview": "📄 Data Preview",
-        "analyzing": "Analyzing spectra...",
+        "analyzing": "Analyzing spectral data...",
         "avg_soc": "Avg SOC",
         "tab_results": "📊 Results",
         "tab_spectral": "📈 Spectral",
@@ -170,7 +170,6 @@ def resample_input(df, target_wavelengths, input_unit):
             val = np.log10(1.0 / val)
             
         # Interpolate to target wavelengths (500 pts as per wavelengths.pkl)
-        # We REMOVE extrapolation to prevent unnatural diagonal lines.
         # If the input range is narrow, the model will see zeros for those bands.
         f = interp1d(input_wavelengths, val, kind='linear', bounds_error=False, fill_value=0.0)
         resampled.append(f(target_wavelengths))
