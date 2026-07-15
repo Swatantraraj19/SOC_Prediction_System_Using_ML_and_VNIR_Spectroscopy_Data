@@ -13,7 +13,7 @@ A high-performance **Agricultural AI** application designed to predict **Soil Or
 ## 🚀 Key Innovation
 Traditional SOC testing is expensive and slow. This project leverages **Machine Learning** to identify the "Light Signature" of soil samples, providing real-time health data for farmers, researchers, and climate scientists.
 
-### 🧠 The "Brain" (Model Architecture)
+### 🧠 The "Brain" ( Model Architecture )
 *   **Dimensionality Reduction (PCA):** Compresses 2,151 high-dimensional spectral wavelengths into 50 principal components to eliminate noise and prevent overfitting.
 *   **ElasticNet Regression:** A hybrid model combining **Lasso (Feature Selection)** and **Ridge (Multicollinearity management)** to ensure stable predictions across variable soil types.
 *   **3-Step Hybrid Calibration:** A custom post-processing pipeline that ensures physically realistic SOC outputs (0.0%—1.0%) and maintains visible trends even in low-signal datasets.
