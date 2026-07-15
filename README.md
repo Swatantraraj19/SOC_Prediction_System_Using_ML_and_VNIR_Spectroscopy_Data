@@ -6,6 +6,8 @@
 
 A high-performance **Agricultural AI** application designed to predict **Soil Organic Carbon (SOC)** using **VNIR Spectroscopy** (350nm—2500nm). This system transitions traditional 7-day laboratory diagnostics into a near-instantaneous digital reporting tool.
 
+![Soil Organic Carbon Prediction System - Upload Interface](images/homepage.png)
+
 ---
 
 ## 🚀 Key Innovation
@@ -23,6 +25,8 @@ Traditional SOC testing is expensive and slow. This project leverages **Machine 
 -   **Automated Data Cleaning:** Built-in whitespace stripping, NaN handling, and metadata filtering for robust "fail-safe" operation.
 -   **Scientific Visualization:** Real-time plotting of spectral signatures and Predicted vs. Actual performance charts.
 -   **Reporting:** Professional high-precision CSV export (4 decimal places) for research documentation.
+
+![Soil Organic Carbon Prediction System - Results Dashboard](images/results.png)
 
 ---
 **Live Link:** https://jalynatmucetgtplmgqf22.streamlit.app/
