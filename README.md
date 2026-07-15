@@ -41,8 +41,8 @@ Traditional SOC testing is expensive and slow. This project leverages **Machine 
 ### Installation
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/Swatantraraj19/Soil-Analysis-and-Prediction.git
-    cd Soil-Analysis-and-Prediction
+    git clone https://github.com/Swatantraraj19/SOC_Prediction_System_Using_ML_and_VNIR_Spectroscopy_Data.git
+    cd SOC_Prediction_System_Using_ML_and_VNIR_Spectroscopy_Data
     ```
 2.  **Install Dependencies:**
     ```bash
